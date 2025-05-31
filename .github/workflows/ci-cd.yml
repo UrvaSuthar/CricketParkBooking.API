@@ -1,0 +1,48 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: '7.0.x'
+
+    - name: Restore dependencies
+      run: dotnet restore
+
+    - name: Build
+      run: dotnet build --no-restore --configuration Release
+
+    # Add tests when you have them
+    # - name: Test
+    #   run: dotnet test --no-build --verbosity normal
+
+    - name: Build Docker image
+      if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+      run: |
+        docker build -t cricket-park-booking-api .
+        
+    # Uncomment and configure these steps when ready to deploy
+    # - name: Login to Azure
+    #   if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    #   uses: azure/login@v1
+    #   with:
+    #     creds: ${{ secrets.AZURE_CREDENTIALS }}
+    
+    # - name: Deploy to Azure Web App
+    #   if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    #   uses: azure/webapps-deploy@v2
+    #   with:
+    #     app-name: your-app-name
+    #     images: cricket-park-booking-api:latest
